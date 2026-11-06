@@ -49,6 +49,7 @@
     .overlay{display:none}
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:fixed;left:0;top:0;transform:translateX(-105%);transition:.2s ease;width:min(86vw,320px);box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.56);z-index:19}.menu-toggle{display:block}.view-switch{overflow-x:auto}.topbar{padding:12px 15px}.content{padding-top:28px}.summary-strip{grid-template-columns:1fr}.cards,.link-grid{grid-template-columns:1fr}.section-head{align-items:flex-start;flex-direction:column}.hide-mobile{display:none}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+    .quick-topics,.search-tools,.result-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.quick-topics{margin:-10px 0 20px;color:var(--muted)}.quick-topics button,.result-actions a{min-height:44px}.search-tools{margin:0 0 20px;color:var(--text)}.search-tools p{margin:0 auto 0 0;color:var(--muted)}.search-tools select{font:inherit;color:var(--text);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:44px;max-width:100%}.result-actions{margin-top:6px}.result-actions a{display:inline-flex;align-items:center}.result h3 a{text-decoration:none}.result h3 a:hover{text-decoration:underline}.topic-index{max-width:880px;margin:12px 0 22px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.topic-index summary{min-height:44px;display:list-item;align-content:center;cursor:pointer}.topic-index ul{margin:6px 0 4px;padding-left:24px}.topic-index a{display:inline-flex;align-items:center;min-height:44px}.markdown [id^="topic-"]{scroll-margin-top:156px}.markdown [id^="topic-"]:focus{outline:2px solid var(--accent);outline-offset:5px;border-radius:3px}.search-tools select:focus-visible,.result a:focus-visible,.topic-index a:focus-visible,.quick-topics button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}@media(max-width:900px){.markdown [id^="topic-"]{scroll-margin-top:220px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.sidebar,.source-card{transition:none}}
   </style>
 </head>
 <body>
@@ -97,11 +98,12 @@
       {id:'somchai-system',chatId:'somchai',name:'สมชาย — System Engineer',file:'somchai-system-engineer-summary-and-links.md',period:'ตรวจเพิ่ม 2 พ.ย. 2026 ถึง 21:44 · ประวัติบางช่วงยังไม่ครบ',color:'#f4b860',blurb:'บทสนทนาช่องโหว่ Linux ที่ต้องตรวจต้นทาง โจทย์ VPN/BGP และแหล่งฝึก SQL'},
       {id:'fullfunnel',name:'หัวหน้าแบงค์ FullFunnel',file:'fullfunnel-summary-and-links.md',period:'21 มิ.ย. – 13 ต.ค. 2026',color:'#f8a563',blurb:'ใหม่: โพสต์ Claude ช่วยทำงานแทน ฉบับจับมือทำ และงานค้างขอลิงก์บทเรียน'}
     ];
-    const initialHash=location.hash.slice(1);const state={current:['overview',...sources.map(s=>s.id)].includes(initialHash)?initialHash:'overview',view:'guide',filter:'all',query:'',docs:new Map()};
+    const [initialHash,initialTopic='']=location.hash.slice(1).split('/');
+    const state={current:['overview',...sources.map(s=>s.id)].includes(initialHash)?initialHash:'overview',topic:/^topic-\d+$/.test(initialTopic)?initialTopic:'',view:'guide',filter:'all',scope:'all',query:'',docs:new Map()};
     const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
     function esc(s=''){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
     function inline(s){let x=esc(s);x=x.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>');x=x.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>');x=x.replace(/(^|\s)(https?:\/\/[^\s<]+)/g,'$1<a href="$2" target="_blank" rel="noopener noreferrer">$2 ↗</a>');return x}
-    function markdown(md){const lines=md.replace(/\r/g,'').split('\n');let out='',list=null,para=[];const flush=()=>{if(para.length){out+=`<p>${inline(para.join(' '))}</p>`;para=[]}if(list){out+=`</${list}>`;list=null}};for(const raw of lines){const line=raw.trim();if(!line){flush();continue}let m;if((m=line.match(/^(#{1,3})\s+(.+)/))){flush();const n=m[1].length;out+=`<h${n}>${inline(m[2])}</h${n}>`;continue}if(/^---+$/.test(line)){flush();out+='<hr>';continue}if((m=line.match(/^[-*]\s+(.+)/))){if(list!=='ul'){flush();list='ul';out+='<ul>'}out+=`<li>${inline(m[1])}</li>`;continue}if((m=line.match(/^\d+\.\s+(.+)/))){if(list!=='ol'){flush();list='ol';out+='<ol>'}out+=`<li>${inline(m[1])}</li>`;continue}if((m=line.match(/^>\s?(.*)/))){flush();out+=`<blockquote>${inline(m[1])}</blockquote>`;continue}para.push(line)}flush();return out}
+    function markdown(md){const lines=md.replace(/\r/g,'').split('\n');let out='',list=null,para=[];const flush=()=>{if(para.length){out+=`<p>${inline(para.join(' '))}</p>`;para=[]}if(list){out+=`</${list}>`;list=null}};for(const [i,raw] of lines.entries()){const line=raw.trim();if(!line){flush();continue}let m;if((m=line.match(/^(#{1,3})\s+(.+)/))){flush();const n=m[1].length;out+=`<h${n} id="topic-${i}" tabindex="-1">${inline(m[2])}</h${n}>`;continue}if(/^---+$/.test(line)){flush();out+='<hr>';continue}if((m=line.match(/^[-*]\s+(.+)/))){if(list!=='ul'){flush();list='ul';out+='<ul>'}out+=`<li>${inline(m[1])}</li>`;continue}if((m=line.match(/^\d+\.\s+(.+)/))){if(list!=='ol'){flush();list='ol';out+='<ol>'}out+=`<li>${inline(m[1])}</li>`;continue}if((m=line.match(/^>\s?(.*)/))){flush();out+=`<blockquote>${inline(m[1])}</blockquote>`;continue}para.push(line)}flush();return out}
     function linksFrom(md,source){const found=[],seen=new Set();const re=/\[([^\]]+)\]\((https?:\/\/[^)]+)\)|(?<!\()https?:\/\/[^\s)]+/g;let m;while((m=re.exec(md))){const url=(m[2]||m[0]).replace(/[.,]$/,'');if(seen.has(url))continue;seen.add(url);found.push({title:m[1]||new URL(url).hostname,url,source,type:linkType(url)})}return found}
     function linkType(url){if(/facebook\.com/i.test(url))return'facebook';if(/youtu/i.test(url))return'youtube';if(/lin\.ee|line\.me/i.test(url))return'line';if(/notion/i.test(url))return'notion';return'website'}
     function icon(t){return({facebook:'FB',youtube:'YT',line:'LINE',notion:'DOC',website:'WEB'})[t]||'LINK'}
@@ -109,21 +111,67 @@
     async function load(){for(const s of sources){state.docs.set(s.id,embeddedDocs[s.file]||'')}renderNav();render()}
     function allLinks(){return sources.flatMap(s=>linksFrom(state.docs.get(s.id)||'',s))}
     function renderNav(){ $('#navOverview').innerHTML=`<a href="#overview" class="nav-btn ${state.current==='overview'?'active':''}" data-id="overview"><span class="dot" style="--c:#fff"></span><span>แดชบอร์ดรวม</span><span class="num">00</span></a>`;$('#navSources').innerHTML=sources.map((s,i)=>`<a href="#${s.id}" class="nav-btn ${state.current===s.id?'active':''}" data-id="${s.id}"><span class="dot" style="--c:${s.color}"></span><span>${s.name}</span><span class="num">0${i+1}</span></a>`).join('')}
-function overview(){const links=allLinks();return`<div class="eyebrow">Personal knowledge base</div><h1>ทุกแชทสำคัญ<br>อยู่ในคู่มือเดียว</h1><p class="lede">ทบทวนประเด็นสำคัญ งานที่ควรทำ กำหนดเวลา และลิงก์จาก Messenger ได้โดยไม่ต้องย้อนหาในแต่ละบทสนทนา</p><div class="summary-strip"><div class="metric"><b>${new Set(sources.map(s=>s.chatId||s.id)).size}</b><span>แชทที่รวบรวม</span></div><div class="metric"><b>${links.length}</b><span>ลิงก์ทั้งหมดก่อนตัดซ้ำข้ามแชท</span></div><div class="metric"><b>${new Set(links.map(x=>x.url)).size}</b><span>ลิงก์ไม่ซ้ำ</span></div></div><h2>เลือกแชทเพื่อเริ่มอ่าน</h2><div class="cards">${sources.map(s=>{const n=links.filter(x=>x.source.id===s.id).length;return`<a href="#${s.id}" class="source-card" style="--c:${s.color}" data-open="${s.id}"><header><div><h3>${s.name}</h3><p>${s.blurb}</p></div><span class="count">${n} ลิงก์</span></header><div class="period" style="margin-top:16px">${s.period}</div></a>`}).join('')}</div><div class="notice">ข้อความตอบกลับที่แนะนำเป็นเพียงฉบับร่าง เว็บไซต์นี้ไม่ได้ส่งข้อความหรือเปลี่ยนแปลงข้อมูลใน Messenger</div>`}
-    function guide(s){const md=state.docs.get(s.id)||'';return`<div class="section-head"><div><div class="eyebrow">Chat guide</div><h1>${s.name}</h1><div class="period">${s.period}</div></div><span class="source-badge" style="--c:${s.color}"><i></i> สรุปตามช่วงที่อ่าน</span></div><article class="markdown">${markdown(md)}</article>`}
+function overview(){const links=allLinks();return`<div class="eyebrow">Personal knowledge base</div><h1>ทุกแชทสำคัญ<br>อยู่ในคู่มือเดียว</h1><p class="lede">ทบทวนประเด็นสำคัญ งานที่ควรทำ กำหนดเวลา และลิงก์จาก Messenger ได้โดยไม่ต้องย้อนหาในแต่ละบทสนทนา</p><div class="quick-topics"><span>ลองค้น:</span>${['Docker','RAG','Prompt Cache','Load Test'].map(term=>`<button type="button" class="chip" data-quick="${term}">${term}</button>`).join('')}</div><div class="summary-strip"><div class="metric"><b>${new Set(sources.map(s=>s.chatId||s.id)).size}</b><span>แชทที่รวบรวม</span></div><div class="metric"><b>${links.length}</b><span>ลิงก์ทั้งหมดก่อนตัดซ้ำข้ามแชท</span></div><div class="metric"><b>${new Set(links.map(x=>x.url)).size}</b><span>ลิงก์ไม่ซ้ำ</span></div></div><h2>เลือกแชทเพื่อเริ่มอ่าน</h2><div class="cards">${sources.map(s=>{const n=links.filter(x=>x.source.id===s.id).length;return`<a href="#${s.id}" class="source-card" style="--c:${s.color}" data-open="${s.id}"><header><div><h3>${s.name}</h3><p>${s.blurb}</p></div><span class="count">${n} ลิงก์</span></header><div class="period" style="margin-top:16px">${s.period}</div></a>`}).join('')}</div><div class="notice">ข้อความตอบกลับที่แนะนำเป็นเพียงฉบับร่าง เว็บไซต์นี้ไม่ได้ส่งข้อความหรือเปลี่ยนแปลงข้อมูลใน Messenger</div>`}
+    function guide(s){const md=state.docs.get(s.id)||'';const topics=md.split(/\r?\n/).flatMap((line,i)=>line.trim().startsWith('## ')?[{i,label:line.trim().slice(3)}]:[]);return`<div class="section-head"><div><div class="eyebrow">Chat guide</div><h1>${s.name}</h1><div class="period">${s.period}</div></div><span class="source-badge" style="--c:${s.color}"><i></i> สรุปตามช่วงที่อ่าน</span></div>${topics.length?`<details class="topic-index"><summary>สารบัญในหมวดนี้ (${topics.length} หัวข้อ)</summary><ul>${topics.map(t=>`<li><a href="#${s.id}/topic-${t.i}">${esc(t.label)}</a></li>`).join('')}</ul></details>`:''}<article class="markdown">${markdown(md)}</article>`}
     function linksView(){let list=allLinks();if(state.current!=='overview')list=list.filter(x=>x.source.id===state.current);if(state.filter!=='all')list=list.filter(x=>x.type===state.filter);const title=state.current==='overview'?'คลังลิงก์ทั้งหมด':`ลิงก์จาก ${sources.find(s=>s.id===state.current).name}`;return`<div class="eyebrow">Link library</div><h1>${title}</h1><p class="lede">กรองตามประเภท แล้วเปิดแหล่งข้อมูลต้นทางในแท็บใหม่</p><div class="filters">${['all','facebook','youtube','line','notion','website'].map(t=>`<button class="chip ${state.filter===t?'active':''}" data-filter="${t}">${({all:'ทั้งหมด',facebook:'Facebook',youtube:'YouTube',line:'LINE',notion:'Notion',website:'เว็บไซต์'})[t]} · ${t==='all'?list.length:allLinks().filter(x=>(state.current==='overview'||x.source.id===state.current)&&x.type===t).length}</button>`).join('')}</div><div class="link-grid">${list.length?list.map(x=>`<article class="link-card"><span class="link-icon">${icon(x.type)}</span><div><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.title)} ↗</a><small>${x.source.name} · ${new URL(x.url).hostname}</small></div></article>`).join(''):'<div class="empty">ไม่พบลิงก์ในตัวกรองนี้</div>'}</div>`}
-    function searchView(q){const low=q.toLowerCase();const results=[];for(const s of sources){const md=state.docs.get(s.id)||'';for(const line of md.split(/\r?\n/)){if(line.toLowerCase().includes(low)&&line.trim()){const clean=line.replace(/^#+\s*|^[-*>\d.]+\s*/,'').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1');results.push({s,text:clean})}}}const hi=t=>esc(t).replace(new RegExp(esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'ig'),m=>`<mark>${m}</mark>`);return`<div class="eyebrow">Search</div><h1>ผลการค้นหา “${esc(q)}”</h1><p class="lede">พบ ${results.length} รายการจาก ${new Set(results.map(x=>x.s.id)).size} แชท</p><div class="search-results">${results.length?results.slice(0,80).map(r=>`<article class="result" data-jump="${r.s.id}"><div class="meta">${r.s.name}</div><p>${hi(r.text)}</p></article>`).join(''):'<div class="empty">ยังไม่พบหัวข้อนี้ ลองใช้คำค้นที่สั้นลง</div>'}</div>`}
-    function render(){const root=$('#content');if(state.query.trim().length>1)root.innerHTML=searchView(state.query.trim());else if(state.view==='links')root.innerHTML=linksView();else if(state.current==='overview')root.innerHTML=overview();else root.innerHTML=guide(sources.find(s=>s.id===state.current));$$('[data-open]').forEach(el=>{const go=()=>{state.current=el.dataset.open;renderNav();render();scrollTo({top:0,behavior:'smooth'})};el.onclick=go;el.onkeydown=e=>{if(e.key==='Enter')go()}});$$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;render()});$$('[data-jump]').forEach(e=>e.onclick=()=>{state.current=e.dataset.jump;state.query='';$('#searchInput').value='';renderNav();render()})}
+    function searchView(q){
+      const low=q.toLowerCase(), terms=low.split(/\s+/), results=[];
+      for(const s of sources){
+        if(state.scope!=='all'&&state.scope!==s.id)continue;
+        let title=s.name, topic='', matches=new Map();
+        (state.docs.get(s.id)||'').split(/\r?\n/).forEach((raw,i)=>{
+          const line=raw.trim(), heading=line.match(/^#{1,3}\s+(.+)/);
+          if(heading){title=heading[1];topic='topic-'+i}
+          const hay=(s.name+' '+title+' '+line).toLowerCase();
+          if(!line||!terms.every(term=>hay.includes(term)))return;
+          const clean=line.replace(/^#+\s*|^[-*>\d.]+\s*/,'').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'$1').replace(/\*\*|`/g,'');
+          const score=(line.toLowerCase().includes(low)?4:0)+(heading?2:0)+(line.toLowerCase().includes(terms[0])?1:0);
+          const existing=matches.get(topic);
+          if(!existing||existing.score<score)matches.set(topic,{s,title,topic,text:clean,score,link:linksFrom(line,s)[0]});
+        });
+        results.push(...matches.values());
+      }
+      results.sort((a,b)=>b.score-a.score);
+      const scopeOptions=[{id:'all',name:'ทุกหมวด'},...sources].map(s=>'<option value="'+s.id+'"'+(s.id===state.scope?' selected':'')+'>'+esc(s.name)+'</option>').join('');
+      const cards=results.slice(0,80).map(r=>'<article class="result"><div class="meta">'+esc(r.s.name)+'</div><h3><a href="#'+r.s.id+(r.topic?'/'+r.topic:'')+'">'+esc(r.title)+'</a></h3><p>'+esc(r.text)+'</p><div class="result-actions"><a href="#'+r.s.id+(r.topic?'/'+r.topic:'')+'">อ่านในคู่มือ →</a>'+(r.link?'<a href="'+esc(r.link.url)+'" target="_blank" rel="noopener noreferrer">เปิดลิงก์ต้นทาง ↗</a>':'')+'</div></article>').join('');
+      return '<div class="eyebrow">ค้นหาความรู้</div><h1>ผลการค้นหา “'+esc(q)+'”</h1><div class="search-tools"><p role="status">พบ '+results.length+' หัวข้อ'+(results.length>80?' · แสดง 80 หัวข้อแรก':'')+'</p><label for="searchScope">ค้นในหมวด</label><select id="searchScope">'+scopeOptions+'</select></div><div class="search-results">'+(cards||'<div class="empty">ไม่พบหัวข้อในหมวดนี้ ลองใช้คำสั้นลงหรือเลือก “ทุกหมวด”</div>')+'</div>';
+    }
+    function focusTopic(){
+      if(!state.topic)return;
+      const target=$('#'+state.topic);
+      target?.focus?.({preventScroll:true});
+      target?.scrollIntoView?.({block:'start'});
+    }
+    function render(){
+      const root=$('#content');
+      if(state.query.trim().length>1)root.innerHTML=searchView(state.query.trim());
+      else if(state.view==='links')root.innerHTML=linksView();
+      else if(state.current==='overview')root.innerHTML=overview();
+      else root.innerHTML=guide(sources.find(s=>s.id===state.current));
+      $$('#searchScope').forEach(select=>select.onchange=()=>{state.scope=select.value;render();$('#searchScope').focus()});
+      $$('[data-quick]').forEach(b=>b.onclick=()=>{state.scope='all';state.query=b.dataset.quick;$('#searchInput').value=state.query;render();$('#searchInput').focus()});
+      $$('[data-filter]').forEach(b=>b.onclick=()=>{state.filter=b.dataset.filter;render()});
+      if(!state.query&&state.view==='guide')focusTopic();
+    }
     function closeMenu(){$('#sidebar').classList.remove('open');$('#overlay').classList.remove('show')}
     $('#menuToggle').onclick=()=>{$('#sidebar').classList.toggle('open');$('#overlay').classList.toggle('show')};$('#overlay').onclick=closeMenu;
     $('#searchInput').addEventListener('input',e=>{state.query=e.target.value;render()});
     $('#searchForm').addEventListener('submit',e=>{e.preventDefault();state.query=$('#searchInput').value;render();$('#searchInput').focus()});
-    const clearSearch=()=>{state.query='';$('#searchInput').value='';render();$('#searchInput').focus()};
+    const clearSearch=()=>{state.query='';state.scope='all';$('#searchInput').value='';render();$('#searchInput').focus()};
     $('#searchClear').addEventListener('click',clearSearch);
     $('#searchInput').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();clearSearch()}});
     $$('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;$$('[data-view]').forEach(x=>x.classList.toggle('active',x===b));render()});
-    document.addEventListener('click',e=>{const b=e.target.closest('.nav-btn[data-id]');if(!b)return;state.current=b.dataset.id;state.query='';$('#searchInput').value='';renderNav();render();closeMenu();window.scrollTo({top:0,behavior:'smooth'})});
-    window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(!['overview',...sources.map(s=>s.id)].includes(id))return;state.current=id;state.query='';$('#searchInput').value='';renderNav();render();closeMenu();window.scrollTo({top:0,behavior:'smooth'})});
+    document.addEventListener('click',e=>{const link=e.target.closest('a[href^="#"]');if(link&&link.getAttribute('href')===location.hash){e.preventDefault();applyRoute()}});
+    function applyRoute(){
+      const [id,topic='']=location.hash.slice(1).split('/');
+      if(!['overview',...sources.map(s=>s.id)].includes(id))return;
+      state.current=id;state.topic=/^topic-\d+$/.test(topic)?topic:'';
+      state.query='';state.scope='all';$('#searchInput').value='';
+      if(state.topic){state.view='guide';$$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='guide'))}
+      renderNav();render();closeMenu();
+      if(!state.topic)window.scrollTo({top:0,behavior:'auto'});
+    }
+    window.addEventListener('hashchange',applyRoute);
     load();
   </script>
 </body>
