@@ -50,6 +50,7 @@
     @media(max-width:900px){.app{grid-template-columns:1fr}.sidebar{position:fixed;left:0;top:0;transform:translateX(-105%);transition:.2s ease;width:min(86vw,320px);box-shadow:var(--shadow)}.sidebar.open{transform:translateX(0)}.overlay.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.56);z-index:19}.menu-toggle{display:block}.view-switch{overflow-x:auto}.topbar{padding:12px 15px}.content{padding-top:28px}.summary-strip{grid-template-columns:1fr}.cards,.link-grid{grid-template-columns:1fr}.section-head{align-items:flex-start;flex-direction:column}.hide-mobile{display:none}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
     .quick-topics,.search-tools,.result-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}.quick-topics{margin:-10px 0 20px;color:var(--muted)}.quick-topics button,.result-actions a{min-height:44px}.search-tools{margin:0 0 20px;color:var(--text)}.search-tools p{margin:0 auto 0 0;color:var(--muted)}.search-tools select{font:inherit;color:var(--text);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:44px;max-width:100%}.result-actions{margin-top:6px}.result-actions a{display:inline-flex;align-items:center}.result h3 a{text-decoration:none}.result h3 a:hover{text-decoration:underline}.topic-index{max-width:880px;margin:12px 0 22px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.topic-index summary{min-height:44px;display:list-item;align-content:center;cursor:pointer}.topic-index ul{margin:6px 0 4px;padding-left:24px}.topic-index a{display:inline-flex;align-items:center;min-height:44px}.markdown [id^="topic-"]{scroll-margin-top:156px}.markdown [id^="topic-"]:focus{outline:2px solid var(--accent);outline-offset:5px;border-radius:3px}.search-tools select:focus-visible,.result a:focus-visible,.topic-index a:focus-visible,.quick-topics button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}@media(max-width:900px){.markdown [id^="topic-"]{scroll-margin-top:220px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.sidebar,.source-card{transition:none}}
+    .demo-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:7px 12px;border:1px solid #416376;border-radius:11px;background:var(--panel-2);color:var(--accent);font-weight:700;white-space:nowrap;text-decoration:none}.demo-link:hover{border-color:var(--accent)}.demo-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   </style>
 </head>
 <body>
@@ -78,6 +79,7 @@
           </div>
           <small class="search-help" id="searchHelp">ค้นหาหัวข้อ เนื้อหา งาน และลิงก์จากทุกแชท · พิมพ์อย่างน้อย 2 ตัวอักษร</small>
         </form>
+        <a class="demo-link" href="demo.html">สร้าง Demo</a>
         <div class="view-switch" role="tablist" aria-label="มุมมอง">
           <button class="active" data-view="guide">คู่มือ</button>
           <button data-view="links">รวมลิงก์</button>
